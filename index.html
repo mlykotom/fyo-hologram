@@ -2,25 +2,55 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <link href="style.css" rel="stylesheet" type="text/css">
+
     <title>Princip hologramu</title>
+
+    <script src="jquery-ui-1.11.4/jquery-2.2.3.min.js"></script>
+    <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
+
+
+
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <link href="jquery-ui-1.11.4/jquery-ui.css" rel="stylesheet" type="text/css">
+
+    <script>
+        $(function() {
+            $( "#tabs" ).tabs();
+        });
+    </script>
 </head>
+
 <body>
 <h1>Princip hologramu</h1>
-<canvas id="canvas" width="500" height="500" style="border:1px solid black;"></canvas>
 
-<div id="variables">
-    <div id="waveLength">
-        <div>Vlnová délka [nm]</div>
-        <input type="range" min="380" max="740" value="520" onchange="wavelengthValueChanged(this.value)">
-        <div id="wavelengthValue">520</div>
+
+
+
+<div id="tabs">
+    <ul>
+        <li><a href="#tabs-1">Záznam</a></li>
+        <li><a href="#tabs-2">Rekonštrukcia</a></li>
+    </ul>
+    <div id="tabs-1">
+        <canvas id="recordingCanvas" width="700" height="500" style="border:1px solid black;"></canvas>
+        <div id="variables">
+            <div id="waveLength">
+                <div>Vlnová délka [nm]</div>
+                <input type="range" min="380" max="740" value="520" onchange="wavelengthValueChanged(this.value)">
+                <div id="wavelengthValue">520</div>
+            </div>
+
+            <div id="angle">
+                <div>Uhol [°]</div>
+                <input type="range" min="1" max="89" value="20" onchange="angleValueChanged(this.value)">
+                <div id="angleValue">20</div>
+            </div>
+        </div>
+    </div>
+    <div id="tabs-2">
+        <canvas id="reconstructionCanvas" width="700" height="500" style="border:1px solid black;"></canvas>
     </div>
 
-    <div id="angle">
-        <div>Uhol [°]</div>
-        <input type="range" min="0" max="90" value="20" onchange="angleValueChanged(this.value)">
-        <div id="angleValue">20</div>
-    </div>
 </div>
 
 
