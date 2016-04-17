@@ -2,7 +2,6 @@ $(window).resize(function () {
     handleResize();
 });
 
-
 /**
  * Global variables
  */
@@ -57,7 +56,7 @@ hologram.addToCanvas(reconstructionCanvas);
  ** @type {Wave}
  */
 var recordObjectWave = new Wave(wavelength, 0, recordingCanvas);
-recordObjectWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2), "recordObjectWave", "Objektova vlna");
+recordObjectWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2), "recordObjectWave", "Objektová vlna");
 
 /**
  * Reference wave
@@ -80,7 +79,7 @@ left_ = (left_ < 0) ? 0 : left_;
  * @type {Wave}
  */
 var reconReferenceWave = new Wave(wavelength, waveAngle, reconstructionCanvas);
-reconReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2), "reconReferenceWave", "Referenční vlna")
+reconReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2), "reconReferenceWave", "Referenční vlna");
 
 /**
  * Reference wave continuation
@@ -95,7 +94,7 @@ reconReferenceWaveContinue.caption.rotate(180);
  * @type {Wave}
  */
 var reconObjectWave = new Wave(wavelength, 0, reconstructionCanvas);
-reconObjectWave.init(left_, (reconstructionCanvas.height / 2), "reconObjectWave", "Objektova vlna");
+reconObjectWave.init(left_, (reconstructionCanvas.height / 2), "reconObjectWave", "Objektová vlna");
 
 
 /**
@@ -183,9 +182,8 @@ function Wave(wavelength_, waveAngle_, canvas) {
             left: left_,
             top: top_,
             width: 300,
-            height: 20,
+            height: 20, // TODO calculate based on object
             fill: 'white'
-
         });
 
         this.caption = new fabric.Text(caption_, {left: left_ + 100, top: top_ + 20, fontSize: 25, id: "caption"});

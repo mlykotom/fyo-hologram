@@ -28,35 +28,40 @@
 
     <!-- Tab panes -->
     <div class="tab-content">
-        <div role="tabpanel" class="tab-pane active" id="record">
-            <div class="row" id="variables">
-                <div id="waveLength" class="col-sm-6">
+        <div role="tabpanel" class="tab-pane row active" id="record">
+            <div class="row ribbon" id="variables">
+                <!-- wavelength setup -->
+                <div id="waveLength" class="col-xs-6 col-sm-3">
                     <label>
-                        <span>Vlnová délka [nm]</span>
+                        <span>
+                            Vlnová délka <strong id="wavelengthValue">520</strong>&nbsp;nm
+                        </span>
                         <input type="range" min="380" max="740" value="520"
                                onchange="wavelengthValueChanged(this.value)">
                     </label>
-                    <div id="wavelengthValue">520</div>
                 </div>
-
-                <div id="angle" class="col-sm-6">
+                <!-- angle setup -->
+                <div id="angle" class="col-xs-6 col-sm-3">
                     <label>
-                        <span>Úhel [°]</span>
+                        <span>
+                            Úhel <strong id="angleValue">20</strong>°
+                        </span>
                         <input type="range" min="1" max="89" value="20" onchange="angleValueChanged(this.value)">
                     </label>
-                    <div id="angleValue">20</div>
                 </div>
             </div>
-            <hr />
+
+            <!-- recording canvas -->
             <div class="row">
                 <div class="col-sm-12" id="canvasWrapper">
-                    <canvas id="recordingCanvas" width="800" height="600"></canvas>
+                    <canvas id="recordingCanvas" width="800" height="400"></canvas>
                 </div>
             </div>
         </div>
 
+        <!-- reconstruction canvas -->
         <div role="tabpanel" class="tab-pane" id="reconstruct">
-            <canvas id="reconstructionCanvas" width="800" height="600"></canvas>
+            <canvas id="reconstructionCanvas" width="800" height="400"></canvas>
         </div>
     </div>
 </div>
