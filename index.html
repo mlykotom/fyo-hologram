@@ -1,59 +1,68 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Content-Language" content="cs">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Princip hologramu</title>
 
-    <script src="jquery-ui-1.11.4/jquery-2.2.3.min.js"></script>
-    <script src="jquery-ui-1.11.4/jquery-ui.js"></script>
-
-
-
-    <link href="style.css" rel="stylesheet" type="text/css">
-    <link href="jquery-ui-1.11.4/jquery-ui.css" rel="stylesheet" type="text/css">
-
-    <script>
-        $(function() {
-            $( "#tabs" ).tabs();
-        });
-    </script>
+    <link href="./css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <link href="./css/style.css" rel="stylesheet" type="text/css"/>
 </head>
 
 <body>
-<h1>Princip hologramu</h1>
+<div class="container">
+    <div class="page-header">
+        <h1>Princip hologramu</h1>
+    </div>
 
-
-
-
-<div id="tabs">
-    <ul>
-        <li><a href="#tabs-1">Záznam</a></li>
-        <li><a href="#tabs-2">Rekonštrukcia</a></li>
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active">
+            <a href="#record" aria-controls="record" role="tab" data-toggle="tab">Záznam</a>
+        </li>
+        <li role="presentation">
+            <a href="#reconstruct" aria-controls="reconstruct" role="tab" data-toggle="tab">Rekonstrukce</a>
+        </li>
     </ul>
-    <div id="tabs-1">
-        <canvas id="recordingCanvas" width="900" height="500" style="border:1px solid black;"></canvas>
-        <div id="variables">
-            <div id="waveLength">
-                <div>Vlnová délka [nm]</div>
-                <input type="range" min="380" max="740" value="520" onchange="wavelengthValueChanged(this.value)">
-                <div id="wavelengthValue">520</div>
-            </div>
 
-            <div id="angle">
-                <div>Uhol [°]</div>
-                <input type="range" min="1" max="89" value="20" onchange="angleValueChanged(this.value)">
-                <div id="angleValue">20</div>
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="record">
+            <div class="row" id="variables">
+                <div id="waveLength" class="col-sm-6">
+                    <label>
+                        <span>Vlnová délka [nm]</span>
+                        <input type="range" min="380" max="740" value="520"
+                               onchange="wavelengthValueChanged(this.value)">
+                    </label>
+                    <div id="wavelengthValue">520</div>
+                </div>
+
+                <div id="angle" class="col-sm-6">
+                    <label>
+                        <span>Úhel [°]</span>
+                        <input type="range" min="1" max="89" value="20" onchange="angleValueChanged(this.value)">
+                    </label>
+                    <div id="angleValue">20</div>
+                </div>
+            </div>
+            <hr />
+            <div class="row">
+                <div class="col-sm-12" id="canvasWrapper">
+                    <canvas id="recordingCanvas" width="800" height="600"></canvas>
+                </div>
             </div>
         </div>
-    </div>
-    <div id="tabs-2">
-        <canvas id="reconstructionCanvas" width="900" height="500" style="border:1px solid black;"></canvas>
-    </div>
 
+        <div role="tabpanel" class="tab-pane" id="reconstruct">
+            <canvas id="reconstructionCanvas" width="800" height="600"></canvas>
+        </div>
+    </div>
 </div>
 
-
+<script type="text/javascript" src="./js/jquery-2.2.3.min.js"></script>
+<script type="text/javascript" src="./js/bootstrap.min.js"></script>
 <script type="text/javascript" src="./js/fabric.js"></script>
 <script type="text/javascript" src="./js/hologram.js"></script>
 </body>

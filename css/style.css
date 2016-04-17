@@ -1,0 +1,16 @@
+body {
+    font-size: 13px;
+}
+
+.canvas-container {
+    background: #fff;
+}
+
+.canvas-container {
+    margin: 0 auto;
+}
+
+.tab-content {
+    border: 1px solid #ddd;
+    border-top: none;
+}

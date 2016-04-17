@@ -1,3 +1,8 @@
+$(window).resize(function () {
+    handleResize();
+});
+
+
 /**
  * Global variables
  */
@@ -11,7 +16,7 @@ var waveAngle = 20;
  */
 var recordingCanvas = new fabric.Canvas('recordingCanvas');
 recordingCanvas.on('mouse:over', canvasOnMouseOver);
-recordingCanvas.on('mouse:out',canvasOnMouseOut);
+recordingCanvas.on('mouse:out', canvasOnMouseOut);
 
 /**
  * Reconstruction canvas
@@ -19,14 +24,26 @@ recordingCanvas.on('mouse:out',canvasOnMouseOut);
  */
 var reconstructionCanvas = new fabric.Canvas('reconstructionCanvas');
 reconstructionCanvas.on('mouse:over', canvasOnMouseOver);
-reconstructionCanvas.on('mouse:out',canvasOnMouseOut);
+reconstructionCanvas.on('mouse:out', canvasOnMouseOut);
+
+function handleResize(){
+    var wrapper = $('#canvasWrapper');
+    console.log(wrapper.width());
+
+    recordingCanvas.setWidth(wrapper.width() - 30);
+    recordingCanvas.calcOffset();
+
+    reconstructionCanvas.setWidth(wrapper.width() - 30);
+}
+
+handleResize();
 
 /**
  * Hologram for both recording and reconstruction
  * @type {Hologram}
  */
 var hologram = new Hologram();
-hologram.init(recordingCanvas,"hologram");
+hologram.init(recordingCanvas, "hologram");
 hologram.addToCanvas(recordingCanvas);
 hologram.addToCanvas(reconstructionCanvas);
 
@@ -40,14 +57,14 @@ hologram.addToCanvas(reconstructionCanvas);
  ** @type {Wave}
  */
 var recordObjectWave = new Wave(wavelength, 0, recordingCanvas);
-recordObjectWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2),"recordObjectWave","Objektova vlna");
+recordObjectWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2), "recordObjectWave", "Objektova vlna");
 
 /**
  * Reference wave
  ** @type {Wave}
  */
 var recordReferenceWave = new Wave(wavelength, waveAngle, recordingCanvas);
-recordReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2),"recordReferenceWave","Referenční vlna");
+recordReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2), "recordReferenceWave", "Referenční vlna");
 
 /*************
  * Reconstruction
@@ -63,14 +80,14 @@ left_ = (left_ < 0) ? 0 : left_;
  * @type {Wave}
  */
 var reconReferenceWave = new Wave(wavelength, waveAngle, reconstructionCanvas);
-reconReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2),"reconReferenceWave","Referenční vlna")
+reconReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2), "reconReferenceWave", "Referenční vlna")
 
 /**
  * Reference wave continuation
  * @type {Wave}
  */
-var reconReferenceWaveContinue = new Wave(wavelength, waveAngle +180 , reconstructionCanvas);
-reconReferenceWaveContinue.init(left_ +300, (reconstructionCanvas.height / 2),"reconReferenceWaveContinue" ,"Referenční vlna");
+var reconReferenceWaveContinue = new Wave(wavelength, waveAngle + 180, reconstructionCanvas);
+reconReferenceWaveContinue.init(left_ + 300, (reconstructionCanvas.height / 2), "reconReferenceWaveContinue", "Referenční vlna");
 reconReferenceWaveContinue.caption.rotate(180);
 
 /**
@@ -78,18 +95,16 @@ reconReferenceWaveContinue.caption.rotate(180);
  * @type {Wave}
  */
 var reconObjectWave = new Wave(wavelength, 0, reconstructionCanvas);
-reconObjectWave.init(left_ , (reconstructionCanvas.height / 2),"reconObjectWave","Objektova vlna");
-
-
+reconObjectWave.init(left_, (reconstructionCanvas.height / 2), "reconObjectWave", "Objektova vlna");
 
 
 /**
  * Callback function, called when mouse is over object
  * @param e
- */function canvasOnMouseOver(e){
+ */function canvasOnMouseOver(e) {
 
     var regexp = /.*Wave.*/;
-    if(e.target.get("id").match(regexp)){
+    if (e.target.get("id").match(regexp)) {
         //na indexe 0 je text
         e.target.item(0).visible = true;
     }
@@ -100,10 +115,10 @@ reconObjectWave.init(left_ , (reconstructionCanvas.height / 2),"reconObjectWave"
  * Callback function, called when mouse leaves object
  * @param e
  */
-function canvasOnMouseOut(e){
+function canvasOnMouseOut(e) {
 
     var regexp = /.*Wave.*/;
-    if(e.target.get("id").match(regexp)){
+    if (e.target.get("id").match(regexp)) {
         e.target.item(0).visible = false;
     }
 
@@ -138,8 +153,8 @@ function angleValueChanged(newAngle) {
 
     //change wavelength of all relevant waves - object wave not affected
     recordReferenceWave.changeAngle(newAngle);
-    reconReferenceWave.changeAngle(newAngle );
-    reconReferenceWaveContinue.changeAngle( newAngle - 180);
+    reconReferenceWave.changeAngle(newAngle);
+    reconReferenceWaveContinue.changeAngle(newAngle - 180);
 
     waveAngle = newAngle;
     hologram.computeInterference();
@@ -162,7 +177,7 @@ function Wave(wavelength_, waveAngle_, canvas) {
      * Object initialization
      * @type {(function(this:Wave))|Function}
      */
-    this.init = function (left_, top_,id_,caption_) {
+    this.init = function (left_, top_, id_, caption_) {
 
         waveWrapper = new fabric.Rect({
             left: left_,
@@ -173,17 +188,17 @@ function Wave(wavelength_, waveAngle_, canvas) {
 
         });
 
-        this.caption = new fabric.Text(caption_, { left: left_+100, top: top_+20,fontSize: 25, id: "caption"});
+        this.caption = new fabric.Text(caption_, {left: left_ + 100, top: top_ + 20, fontSize: 25, id: "caption"});
         this.caption.visible = false;
         objectList.push(this.caption);
         objectList.push(waveWrapper);
 
-        if(id_ == "recordObjectWave"){
+        if (id_ == "recordObjectWave") {
             var circle = new fabric.Circle({
                 radius: 30,
                 fill: 'white',
                 left: left_ + 300,
-                top: top_ -17,
+                top: top_ - 17,
                 strokeWidth: 2,
                 stroke: 'black',
                 id: "circle",
@@ -193,12 +208,12 @@ function Wave(wavelength_, waveAngle_, canvas) {
             top_ -= 17;
         }
 
-        if(id_ == "reconObjectWave"){
+        if (id_ == "reconObjectWave") {
             var circle = new fabric.Circle({
                 radius: 30,
                 fill: 'white',
-                left: left_ -60,
-                top: top_ -17,
+                left: left_ - 60,
+                top: top_ - 17,
                 strokeDashArray: [5, 5],
                 stroke: 'black',
                 id: "circle",
@@ -215,8 +230,8 @@ function Wave(wavelength_, waveAngle_, canvas) {
             top: top_,
             angle: this.waveAngle,
             id: id_,
-            originX:'left',
-            originY:'top',
+            originX: 'left',
+            originY: 'top',
             centeredRotation: false
         });
 
@@ -329,8 +344,8 @@ function Wave(wavelength_, waveAngle_, canvas) {
      */
     this.changeWaveLength = function (newWavelength) {
 
-        group.forEachObject(function(o){
-            if(o.get("id") != "circle" && o.get("id") != "caption")
+        group.forEachObject(function (o) {
+            if (o.get("id") != "circle" && o.get("id") != "caption")
                 group.remove(o);
         });
         this.wavelength = newWavelength * axisScale;
@@ -351,7 +366,7 @@ function Hologram() {
      * Object initialization
      * @type {(function(this:Hologram))|Function}
      */
-    this.init = function (canvas,id_) {
+    this.init = function (canvas, id_) {
 
         hologramRect = new fabric.Rect({
             stroke: 'black',
@@ -418,8 +433,5 @@ function Hologram() {
             y2: hologramRect.height,
             colorStops: colors
         });
-
-
     }
-
 }
