@@ -1,108 +1,148 @@
-// TODO:
-// pociatocna vlnova dlzka je nastvena rucne, uhol to iste
-// style aspon trosku :D
-// zmena hodnoty vlnovej dlzky - eventListener?
-// skalovanie vlnovej dlzky na pixely?
-
-
-// skalovanie osy, aby to bolo nejako rozumne viditelne
+/**
+ * Global variables
+ */
 var axisScale = 0.02;
 var wavelength = 520;
 var waveAngle = 20;
 
-// create a wrapper around native canvas element
+/**
+ * Recording canvas
+ * @type {fabric.Element}
+ */
 var recordingCanvas = new fabric.Canvas('recordingCanvas');
-var reconstructionCanvas = new fabric.Canvas('reconstructionCanvas');
-
 recordingCanvas.on('mouse:over', canvasOnMouseOver);
 recordingCanvas.on('mouse:out',canvasOnMouseOut);
 
+/**
+ * Reconstruction canvas
+ * @type {fabric.Element}
+ */
+var reconstructionCanvas = new fabric.Canvas('reconstructionCanvas');
 reconstructionCanvas.on('mouse:over', canvasOnMouseOver);
 reconstructionCanvas.on('mouse:out',canvasOnMouseOut);
 
-//hologram
-var holo = new Hologram();
-holo.init(recordingCanvas,"holo");
-holo.addToCanvas(recordingCanvas);
-holo.addToCanvas(reconstructionCanvas);
+/**
+ * Hologram for both recording and reconstruction
+ * @type {Hologram}
+ */
+var hologram = new Hologram();
+hologram.init(recordingCanvas,"hologram");
+hologram.addToCanvas(recordingCanvas);
+hologram.addToCanvas(reconstructionCanvas);
+
+/*************
+ * Recording
+ ************/
 
 
-//objektova vlna - zaznam
-var recObjectWave = new Wave(wavelength, waveAngle, recordingCanvas);
-recObjectWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2),"wave","Objektova vlna");
+/**
+ * Object wave
+ ** @type {Wave}
+ */
+var recordObjectWave = new Wave(wavelength, 0, recordingCanvas);
+recordObjectWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2),"recordObjectWave","Objektova vlna");
 
-//referencna vlna - zaznam
-var recReferenceWave = new Wave(wavelength, 0, recordingCanvas);
-recReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2),"wave","Referenční vlna");
+/**
+ * Reference wave
+ ** @type {Wave}
+ */
+var recordReferenceWave = new Wave(wavelength, waveAngle, recordingCanvas);
+recordReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2),"recordReferenceWave","Referenční vlna");
 
-//referencna vlna  - rekonstrukcia
-var reconReferenceWave = new Wave(wavelength, 0, reconstructionCanvas);
-reconReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2),"wave","Referenční vlna")
+/*************
+ * Reconstruction
+ ************/
 
-//left pre vlny za hologramom
-var left_ = reconstructionCanvas.width / 2 - (300 + holo.getHologramHeight());
-//aby vlna nezacinala za okrajom canvasu
+//left for waves on the left half of canvas
+var left_ = reconstructionCanvas.width / 2 - (300 + hologram.getHologramHeight());
+//avoid values less then 0
 left_ = (left_ < 0) ? 0 : left_;
-console.log(left_);
-//referencna vlna pokracovanie - rekonstrukcia
-var reconReferenceWaveContinue = new Wave(wavelength, 0, reconstructionCanvas);
-reconReferenceWaveContinue.init(left_, (reconstructionCanvas.height / 2),"wave","Referenční vlna");
 
-//objektova vlna - rekonstrukcia
-var reconObjectWave = new Wave(wavelength, waveAngle + 180, reconstructionCanvas);
-reconObjectWave.init(left_ + 300, (reconstructionCanvas.height / 2),"wave","Objektova vlna");
-reconObjectWave.caption.rotate(180);
+/**
+ * Reference wave
+ * @type {Wave}
+ */
+var reconReferenceWave = new Wave(wavelength, waveAngle, reconstructionCanvas);
+reconReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2),"reconReferenceWave","Referenční vlna")
 
-//konjugovana vlna - rekonstrukcia
-var reconConjugatedWave = new Wave(wavelength, (-1) * waveAngle + 180, reconstructionCanvas);
-reconConjugatedWave.init(left_ + 300, (reconstructionCanvas.height / 2) + 40,"wave","Konjugovana vlna");
-reconConjugatedWave.caption.rotate(180);
+/**
+ * Reference wave continuation
+ * @type {Wave}
+ */
+var reconReferenceWaveContinue = new Wave(wavelength, waveAngle +180 , reconstructionCanvas);
+reconReferenceWaveContinue.init(left_ +300, (reconstructionCanvas.height / 2),"reconReferenceWaveContinue" ,"Referenční vlna");
+reconReferenceWaveContinue.caption.rotate(180);
 
-function canvasOnMouseOver(e){
+/**
+ * Object wave
+ * @type {Wave}
+ */
+var reconObjectWave = new Wave(wavelength, 0, reconstructionCanvas);
+reconObjectWave.init(left_ , (reconstructionCanvas.height / 2),"reconObjectWave","Objektova vlna");
 
-    if(e.target.get("id") == "wave"){
+
+
+
+/**
+ * Callback function, called when mouse is over object
+ * @param e
+ */function canvasOnMouseOver(e){
+
+    var regexp = /.*Wave.*/;
+    if(e.target.get("id").match(regexp)){
+        //na indexe 0 je text
         e.target.item(0).visible = true;
     }
     e.target.canvas.renderAll();
-    //recordingCanvas.renderAll();
 }
 
+/**
+ * Callback function, called when mouse leaves object
+ * @param e
+ */
 function canvasOnMouseOut(e){
 
-    if(e.target.get("id") == "wave"){
+    var regexp = /.*Wave.*/;
+    if(e.target.get("id").match(regexp)){
         e.target.item(0).visible = false;
     }
 
     e.target.canvas.renderAll();
 }
 
+/**
+ * Callback function, called when wavelength is changed
+ * @param newValue
+ */
 function wavelengthValueChanged(newValue) {
     document.getElementById("wavelengthValue").innerHTML = newValue;
-    //zaznam
-    recObjectWave.changeWaveLength(newValue);
-    recReferenceWave.changeWaveLength(newValue);
-    //rekonstrukcia
+    //change wavelength of all waves
+    recordObjectWave.changeWaveLength(newValue);
+    recordReferenceWave.changeWaveLength(newValue);
     reconReferenceWave.changeWaveLength(newValue);
     reconReferenceWaveContinue.changeWaveLength(newValue);
     reconObjectWave.changeWaveLength(newValue);
-    reconConjugatedWave.changeWaveLength(newValue);
 
     wavelength = newValue;
-    holo.computeInterference();
+    hologram.computeInterference();
 
     reconstructionCanvas.renderAll();
     recordingCanvas.renderAll();
 }
-
+/**
+ * Callback function, called when angle is changed
+ * @param newAngle
+ */
 function angleValueChanged(newAngle) {
     document.getElementById("angleValue").innerHTML = newAngle;
-    recObjectWave.changeAngle(newAngle);
 
-    reconObjectWave.changeAngle(newAngle - 180);
-    reconConjugatedWave.changeAngle((-1) * newAngle - 180);
+    //change wavelength of all relevant waves - object wave not affected
+    recordReferenceWave.changeAngle(newAngle);
+    reconReferenceWave.changeAngle(newAngle );
+    reconReferenceWaveContinue.changeAngle( newAngle - 180);
 
     waveAngle = newAngle;
-    holo.computeInterference();
+    hologram.computeInterference();
 
     reconstructionCanvas.renderAll();
     recordingCanvas.renderAll();
@@ -118,25 +158,55 @@ function Wave(wavelength_, waveAngle_, canvas) {
     this.waveAngle = waveAngle_;
     this.caption = null;
 
+    /**
+     * Object initialization
+     * @type {(function(this:Wave))|Function}
+     */
     this.init = function (left_, top_,id_,caption_) {
 
         waveWrapper = new fabric.Rect({
-            //stroke: 'black',
-            //strokeWidth: 2,
             left: left_,
             top: top_,
             width: 300,
             height: 20,
-            fill: 'white',
+            fill: 'white'
 
         });
 
-
-
-       this.caption = new fabric.Text(caption_, { left: left_+100, top: top_+20,fontSize: 25 });
+        this.caption = new fabric.Text(caption_, { left: left_+100, top: top_+20,fontSize: 25, id: "caption"});
         this.caption.visible = false;
         objectList.push(this.caption);
         objectList.push(waveWrapper);
+
+        if(id_ == "recordObjectWave"){
+            var circle = new fabric.Circle({
+                radius: 30,
+                fill: 'white',
+                left: left_ + 300,
+                top: top_ -17,
+                strokeWidth: 2,
+                stroke: 'black',
+                id: "circle",
+                selectable: false
+            });
+            objectList.push(circle);
+            top_ -= 17;
+        }
+
+        if(id_ == "reconObjectWave"){
+            var circle = new fabric.Circle({
+                radius: 30,
+                fill: 'white',
+                left: left_ -60,
+                top: top_ -17,
+                strokeDashArray: [5, 5],
+                stroke: 'black',
+                id: "circle",
+                selectable: false
+            });
+            objectList.push(circle);
+            top_ -= 17;
+        }
 
         this.fillWave();
 
@@ -144,19 +214,21 @@ function Wave(wavelength_, waveAngle_, canvas) {
             left: left_,
             top: top_,
             angle: this.waveAngle,
-            id: id_
+            id: id_,
+            originX:'left',
+            originY:'top',
+            centeredRotation: false
         });
 
         group.set('selectable', false); //unselectable
-
         canvas.add(group);
+        group.moveTo(-10);         //z-index
 
-        //z-index
-        group.moveTo(-10);
     }.bind(this);
 
+
     /**
-     * Prevedie vlnovu dlzku na farbu
+     * Transforms wavelength to color
      * http://scienceprimer.com/javascript-code-convert-light-wavelength-color
      * @param wavelength
      * @returns {Array}
@@ -206,17 +278,17 @@ function Wave(wavelength_, waveAngle_, canvas) {
             alpha = 1;
         }
 
-        //colorSpace[0] je farba
-        colorSpace = ["rgba(" + (R * 100) + "%," + (G * 100) + "%," + (B * 100) + "%, " + alpha + ")", R, G, B, alpha]
+        //colorSpace[0] == color
+        colorSpace = ["rgba(" + (R * 100) + "%," + (G * 100) + "%," + (B * 100) + "%, " + alpha + ")", R, G, B, alpha];
 
         return colorSpace;
 
     };
 
-    this.getWaveWidth = function () {
-        return waveWrapper.width;
-    };
-
+    /**
+     * Creates wave elements (a.k.a rectangles) with appropriate color
+     * @type {(function(this:Wave))|Function}
+     */
     this.fillWave = function () {
         var currentX = waveWrapper.left;
         var waveRight = waveWrapper.left + waveWrapper.width;
@@ -239,24 +311,28 @@ function Wave(wavelength_, waveAngle_, canvas) {
         }
     }.bind(this);
 
+    /**
+     * Sets new wave angle
+     * @type {(function(this:Wave))|Function}
+     */
     this.changeAngle = function (newAngle) {
         if (group != null) {
             this.waveAngle = newAngle;
-            group.angle = newAngle;
-
+            group.setAngle(newAngle);
         }
-
     }.bind(this);
 
 
+    /**
+     * Sets new wavelength and renders the wave
+     * @type {(function(this:Wave))|Function}
+     */
     this.changeWaveLength = function (newWavelength) {
 
-        //tak toto je fakt...
-        var length = objectList.length;
-        for (var i = 0; i < length; i++) {
-            group.remove(group.item(1));
-
-        }
+        group.forEachObject(function(o){
+            if(o.get("id") != "circle" && o.get("id") != "caption")
+                group.remove(o);
+        });
         this.wavelength = newWavelength * axisScale;
         this.fillWave();
 
@@ -267,12 +343,14 @@ function Wave(wavelength_, waveAngle_, canvas) {
 
 function Hologram() {
 
-
     var hologramRect = null;
     var interferenceMaximum = -1;
-    var numOfMaximas = 0;
+    var numOfMaximums = 0;
 
-
+    /**
+     * Object initialization
+     * @type {(function(this:Hologram))|Function}
+     */
     this.init = function (canvas,id_) {
 
         hologramRect = new fabric.Rect({
@@ -292,32 +370,39 @@ function Hologram() {
         this.computeInterference();
     }.bind(this);
 
+    /**
+     * Adds hologram to given canvas
+     * @param canvas
+     */
     this.addToCanvas = function (canvas) {
         canvas.add(hologramRect);
-
     };
 
-    this.getHologramWidth = function () {
-        return hologramRect.width;
-    };
-
+    /**
+     * :O
+     * @returns {*}
+     */
     this.getHologramHeight = function () {
         return hologramRect.height;
     };
 
+    /**
+     * Computes interference pattern based on wavelength
+     */
     this.computeInterference = function () {
 
+        //x = lambda/sin(fi)
         interferenceMaximum = (wavelength * axisScale) / Math.sin(waveAngle * (Math.PI / 180));
-        numOfMaximas = Math.floor(hologramRect.width / interferenceMaximum);
+        numOfMaximums = Math.floor(hologramRect.width / interferenceMaximum);
 
         var colors = {
             0: "white"
         };
 
-        var colorStep = 1 / (numOfMaximas * 2);
-        for (var n = 1; n < (numOfMaximas * 2); n++) {
+        var colorStep = 1 / (numOfMaximums * 2);
+        for (var n = 1; n < (numOfMaximums * 2); n++) {
 
-            //test ci je n lyche alebo sude
+            //odd or even
             if (n === parseFloat(n) ? !(n % 2) : void 0)
                 colors[n * colorStep] = "white";
             else
