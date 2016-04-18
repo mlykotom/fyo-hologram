@@ -2,6 +2,7 @@ $(window).resize(function () {
     handleResize();
 });
 
+var windowBottomCompensation = 100;
 var caption_font_size = 20;
 var caption_char_px_half = 4;
 var wave_step_width = 3;
@@ -19,23 +20,30 @@ var waveAngle = 20;
  * @type {fabric.Canvas}
  */
 var recordingCanvas = new fabric.Canvas('recordingCanvas');
-recordingCanvas.on('mouse:over', canvasOnMouseOver);
-recordingCanvas.on('mouse:out', canvasOnMouseOut);
+recordingCanvas.on('mouse:over', canvasOnMouseOverOut.bind(recordingCanvas, true));
+recordingCanvas.on('mouse:out', canvasOnMouseOverOut.bind(recordingCanvas, false));
 
 /**
  * Reconstruction canvas
- * @type {fabric.Element}
+ * @type {fabric.Canvas}
  */
 var reconstructionCanvas = new fabric.Canvas('reconstructionCanvas');
-reconstructionCanvas.on('mouse:over', canvasOnMouseOver);
-reconstructionCanvas.on('mouse:out', canvasOnMouseOut);
+reconstructionCanvas.on('mouse:over', canvasOnMouseOverOut.bind(reconstructionCanvas, true));
+reconstructionCanvas.on('mouse:out', canvasOnMouseOverOut.bind(reconstructionCanvas, false));
+
+var headerHeight = $('#header').height();
+
 
 function handleResize() {
-    var wrapper = $('#canvasWrapper');
-    recordingCanvas.setWidth(wrapper.width() - canvas_padding);
+    var wrapperWidth = $('#canvasWrapper').width() - canvas_padding;
+    var windowHeight = $(window).height() - headerHeight - windowBottomCompensation;
+
+    recordingCanvas.setWidth(wrapperWidth);
+    recordingCanvas.setHeight(windowHeight);
     recordingCanvas.calcOffset();
 
-    reconstructionCanvas.setWidth(wrapper.width() - canvas_padding);
+    reconstructionCanvas.setWidth(wrapperWidth);
+    reconstructionCanvas.setHeight(windowHeight);
     reconstructionCanvas.calcOffset();
 }
 
@@ -100,32 +108,21 @@ reconReferenceWaveContinue.caption.rotate(180);
 var reconObjectWave = new Wave(wavelength, 0, reconstructionCanvas);
 reconObjectWave.init(left_, (reconstructionCanvas.height / 2), "reconObjectWave", "Objektová vlna", true);
 
-
 /**
- * Callback function, called when mouse is over object
- * @param e
- */function canvasOnMouseOver(e) {
-
+ * Callback function, called when mouse is over or out of object
+ * @param isOver
+ * @param event
+ */function canvasOnMouseOverOut(isOver, event) {
     var regexp = /.*Wave.*/;
-    if (e.target.get("id").match(regexp)) {
-        //na indexe 0 je text
-        e.target.item(0).visible = true;
+    if (event.target.get("id").match(regexp)) {
+        var wave = event.target;
+        var textObjects = wave.getObjects('text');
+        if (textObjects.length > 0) {
+            textObjects[0].visible = isOver;
+
+        }
     }
-    e.target.canvas.renderAll();
-}
-
-/**
- * Callback function, called when mouse leaves object
- * @param e
- */
-function canvasOnMouseOut(e) {
-
-    var regexp = /.*Wave.*/;
-    if (e.target.get("id").match(regexp)) {
-        e.target.item(0).visible = false;
-    }
-
-    e.target.canvas.renderAll();
+    event.target.canvas.renderAll();
 }
 
 /**
@@ -178,7 +175,7 @@ function Wave(wavelength_, waveAngle_, canvas) {
     var group = null;
     var waveWrapper = null;
     var width = 300;
-    var height = 20; // TODO calculate based on object
+    var height = __circle_radius_stroke * 2;
 
     this.wavelength = wavelength_ * axisScale;
     this.waveAngle = waveAngle_;
@@ -229,7 +226,7 @@ function Wave(wavelength_, waveAngle_, canvas) {
             left: left_,
             top: top_ - __circle_radius_stroke,
             width: width,
-            height: __circle_radius_stroke * 2,
+            height: height,
             fill: 'transparent'
         });
 
@@ -241,8 +238,8 @@ function Wave(wavelength_, waveAngle_, canvas) {
             visible: false
         });
 
-        objectList.push(this.caption); // must be first
         objectList.push(waveWrapper);
+        objectList.push(this.caption);
         this.fillWave();
 
         if (circleCreating) {
@@ -250,7 +247,6 @@ function Wave(wavelength_, waveAngle_, canvas) {
             top_ -= __circle_radius_stroke;
             objectList.push(circle);
         }
-
 
         group = new fabric.Group(objectList, {
             left: left_,
@@ -330,13 +326,13 @@ function Wave(wavelength_, waveAngle_, canvas) {
      * @type {(function(this:Wave))|Function}
      */
     this.fillWave = function () {
-        var currentX = waveWrapper.left;
+        var currentX = waveWrapper.left - wave_step_width;
         var waveRight = waveWrapper.left + waveWrapper.width;
 
         var listOfWaveLines = [];
         while (currentX < waveRight) {
             var waveLine = new fabric.Rect({
-                left: currentX - 2,
+                left: currentX,
                 top: waveWrapper.top,
                 fill: this.wavelengthToColor(this.wavelength / axisScale)[0],
                 width: wave_step_width,
@@ -350,7 +346,6 @@ function Wave(wavelength_, waveAngle_, canvas) {
             id: 'waveLines'
         });
         objectList.push(waveLinesGroup);
-
     }.bind(this);
 
     /**
