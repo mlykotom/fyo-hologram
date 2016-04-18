@@ -2,6 +2,11 @@ $(window).resize(function () {
     handleResize();
 });
 
+var caption_font_size = 20;
+var caption_char_px_half = 4;
+var wave_step_width = 3;
+var canvas_padding = 30;
+
 /**
  * Global variables
  */
@@ -11,7 +16,7 @@ var waveAngle = 20;
 
 /**
  * Recording canvas
- * @type {fabric.Element}
+ * @type {fabric.Canvas}
  */
 var recordingCanvas = new fabric.Canvas('recordingCanvas');
 recordingCanvas.on('mouse:over', canvasOnMouseOver);
@@ -25,14 +30,13 @@ var reconstructionCanvas = new fabric.Canvas('reconstructionCanvas');
 reconstructionCanvas.on('mouse:over', canvasOnMouseOver);
 reconstructionCanvas.on('mouse:out', canvasOnMouseOut);
 
-function handleResize(){
+function handleResize() {
     var wrapper = $('#canvasWrapper');
-    console.log(wrapper.width());
-
-    recordingCanvas.setWidth(wrapper.width() - 30);
+    recordingCanvas.setWidth(wrapper.width() - canvas_padding);
     recordingCanvas.calcOffset();
 
-    reconstructionCanvas.setWidth(wrapper.width() - 30);
+    reconstructionCanvas.setWidth(wrapper.width() - canvas_padding);
+    reconstructionCanvas.calcOffset();
 }
 
 handleResize();
@@ -50,20 +54,20 @@ hologram.addToCanvas(reconstructionCanvas);
  * Recording
  ************/
 
-
-/**
- * Object wave
- ** @type {Wave}
- */
-var recordObjectWave = new Wave(wavelength, 0, recordingCanvas);
-recordObjectWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2), "recordObjectWave", "Objektová vlna");
-
 /**
  * Reference wave
  ** @type {Wave}
  */
 var recordReferenceWave = new Wave(wavelength, waveAngle, recordingCanvas);
 recordReferenceWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2), "recordReferenceWave", "Referenční vlna");
+
+/**
+ * Object wave
+ ** @type {Wave}
+ */
+var recordObjectWave = new Wave(wavelength, 0, recordingCanvas);
+recordObjectWave.init(recordingCanvas.width / 2, (recordingCanvas.height / 2), "recordObjectWave", "Objektová vlna", true);
+
 
 /*************
  * Reconstruction
@@ -94,7 +98,7 @@ reconReferenceWaveContinue.caption.rotate(180);
  * @type {Wave}
  */
 var reconObjectWave = new Wave(wavelength, 0, reconstructionCanvas);
-reconObjectWave.init(left_, (reconstructionCanvas.height / 2), "reconObjectWave", "Objektová vlna");
+reconObjectWave.init(left_, (reconstructionCanvas.height / 2), "reconObjectWave", "Objektová vlna", true);
 
 
 /**
@@ -164,64 +168,89 @@ function angleValueChanged(newAngle) {
 
 function Wave(wavelength_, waveAngle_, canvas) {
 
+    var options_circle = {
+        radius: 30,
+        stroke: 2
+    };
+
+    var __circle_radius_stroke = (options_circle.radius + options_circle.stroke);
     var objectList = [];
     var group = null;
     var waveWrapper = null;
+    var width = 300;
+    var height = 20; // TODO calculate based on object
 
     this.wavelength = wavelength_ * axisScale;
     this.waveAngle = waveAngle_;
     this.caption = null;
 
     /**
+     * Creation of hologram object
+     * @param top_
+     * @param left_
+     * @param id_
+     * @returns {*}
+     */
+    this.createCircle = function (top_, left_, id_) {
+        var left, strokeDash = [];
+        if (id_ == "recordObjectWave") {
+            left = left_ + width - __circle_radius_stroke;
+        }
+        else if (id_ == "reconObjectWave") {
+            left = left_ - __circle_radius_stroke;
+            strokeDash = [5, 5];
+        }
+        else {
+            return;
+        }
+
+        var circle = new fabric.Circle({
+            radius: options_circle.radius,
+            fill: 'white',
+            left: left,
+            top: top_,
+            strokeWidth: options_circle.stroke,
+            strokeDashArray: strokeDash,
+            stroke: 'black',
+            id: "circle",
+            selectable: false
+        });
+
+        return circle;
+    };
+
+    /**
      * Object initialization
      * @type {(function(this:Wave))|Function}
      */
-    this.init = function (left_, top_, id_, caption_) {
+    this.init = function (left_, top_, id_, caption_, circleCreating) {
 
         waveWrapper = new fabric.Rect({
             left: left_,
-            top: top_,
-            width: 300,
-            height: 20, // TODO calculate based on object
-            fill: 'white'
+            top: top_ - __circle_radius_stroke,
+            width: width,
+            height: __circle_radius_stroke * 2,
+            fill: 'transparent'
         });
 
-        this.caption = new fabric.Text(caption_, {left: left_ + 100, top: top_ + 20, fontSize: 25, id: "caption"});
-        this.caption.visible = false;
-        objectList.push(this.caption);
+        this.caption = new fabric.Text(caption_, {
+            left: waveWrapper.left + (waveWrapper.width / 2) - (caption_.length * caption_char_px_half),
+            top: waveWrapper.top + waveWrapper.height,
+            fontSize: caption_font_size,
+            id: "caption",
+            visible: false
+        });
+
+        objectList.push(this.caption); // must be first
         objectList.push(waveWrapper);
-
-        if (id_ == "recordObjectWave") {
-            var circle = new fabric.Circle({
-                radius: 30,
-                fill: 'white',
-                left: left_ + 300,
-                top: top_ - 17,
-                strokeWidth: 2,
-                stroke: 'black',
-                id: "circle",
-                selectable: false
-            });
-            objectList.push(circle);
-            top_ -= 17;
-        }
-
-        if (id_ == "reconObjectWave") {
-            var circle = new fabric.Circle({
-                radius: 30,
-                fill: 'white',
-                left: left_ - 60,
-                top: top_ - 17,
-                strokeDashArray: [5, 5],
-                stroke: 'black',
-                id: "circle",
-                selectable: false
-            });
-            objectList.push(circle);
-            top_ -= 17;
-        }
-
         this.fillWave();
+
+        if (circleCreating) {
+            var circle = this.createCircle(waveWrapper.top, left_, id_);
+            top_ -= __circle_radius_stroke;
+            objectList.push(circle);
+        }
+
 
         group = new fabric.Group(objectList, {
             left: left_,
@@ -230,15 +259,13 @@ function Wave(wavelength_, waveAngle_, canvas) {
             id: id_,
             originX: 'left',
             originY: 'top',
-            centeredRotation: false
+            centeredRotation: false,
+            selectable: false
         });
 
-        group.set('selectable', false); //unselectable
         canvas.add(group);
-        group.moveTo(-10);         //z-index
-
+        group.moveTo(-1);   //z-index
     }.bind(this);
-
 
     /**
      * Transforms wavelength to color
@@ -306,22 +333,24 @@ function Wave(wavelength_, waveAngle_, canvas) {
         var currentX = waveWrapper.left;
         var waveRight = waveWrapper.left + waveWrapper.width;
 
-
+        var listOfWaveLines = [];
         while (currentX < waveRight) {
             var waveLine = new fabric.Rect({
                 left: currentX - 2,
                 top: waveWrapper.top,
                 fill: this.wavelengthToColor(this.wavelength / axisScale)[0],
-                width: 4,
-                height: 20
+                width: wave_step_width,
+                height: waveWrapper.height
 
             });
-            objectList.push(waveLine);
-
+            listOfWaveLines.push(waveLine);
             currentX += this.wavelength;
-
-
         }
+        var waveLinesGroup = new fabric.Group(listOfWaveLines, {
+            id: 'waveLines'
+        });
+        objectList.push(waveLinesGroup);
+
     }.bind(this);
 
     /**
@@ -341,17 +370,25 @@ function Wave(wavelength_, waveAngle_, canvas) {
      * @type {(function(this:Wave))|Function}
      */
     this.changeWaveLength = function (newWavelength) {
-
+        var circle;
         group.forEachObject(function (o) {
-            if (o.get("id") != "circle" && o.get("id") != "caption")
-                group.remove(o);
+            // select circle if awailable
+            if (o.get("id") == "circle") {
+                circle = o;
+            }
+
+            if (o.get("id") == "caption" || o.type != 'group') return;
+
+            group.remove(o);
         });
         this.wavelength = newWavelength * axisScale;
         this.fillWave();
-
+        // add it as last so that it is on top of waves
+        if (circle) {
+            objectList.push(circle);
+        }
 
     }.bind(this);
-
 }
 
 function Hologram() {
