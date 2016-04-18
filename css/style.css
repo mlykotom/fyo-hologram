@@ -1,0 +1,39 @@
+
+body {
+    font-size: 13px;
+}
+
+.page-header {
+    margin-top: 0;
+}
+
+.canvas-container {
+    background: #fff;
+}
+
+.canvas-container {
+    margin: 0 auto;
+}
+
+ul.nav-tabs {
+    border-bottom: none;
+}
+
+.tab-content {
+    border: 1px solid #ddd;
+    border-top-right-radius: 10px;
+    -webkit-border-top-right-radius: 10px;
+    -moz-border-radius-topright: 10px;
+    overflow: hidden;
+}
+
+.nav-tabs li.active > a {
+    background: #ddd !important;
+}
+
+.tab-pane > .ribbon {
+    margin-left: 15px;
+    margin-right: 15px;
+    padding: 15px;
+    background: #ddd;
+}
