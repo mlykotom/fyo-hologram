@@ -37,8 +37,7 @@
                         <span>
                             Vlnová délka <strong id="wavelengthValue">520</strong>&nbsp;nm
                         </span>
-                        <input type="range" min="380" max="740" value="520"
-                               onchange="Scene.handlers.wavelengthValueChanged(this.value)">
+                        <input id="waveLengthInput" type="range" min="380" max="740" value="520" />
                     </label>
                 </div>
                 <!-- angle setup -->
@@ -47,7 +46,7 @@
                         <span>
                             Úhel <strong id="angleValue">20</strong>°
                         </span>
-                        <input type="range" min="1" max="89" value="20" onchange="Scene.handlers.angleValueChanged(this.value)">
+                        <input id="waveAngleInput" type="range" min="1" max="89" value="20" />
                     </label>
                 </div>
             </div>
