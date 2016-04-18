@@ -10,6 +10,10 @@ var Scene = {
     reconstructionCanvas: null,
     /** @type {Hologram} **/
     hologram: null,
+    hologramOpt: {
+        height: 230,
+        width: 70
+    },
     /** record tab **/
     record: {
         referenceWave: null,
@@ -22,26 +26,25 @@ var Scene = {
         objectWave: null
     },
     /** various options **/
-    options: {
-        windowBottomCompensation: 100,
-        canvas_padding: 30,
-        axisScale: 0.02,
+    windowBottomCompensation: 100,
+    canvas_padding: 30,
+    axisScale: 0.02,
 
-        caption: {
-            fontSize: 20,
-            charPxHalf: 4
-        },
+    caption: {
+        fontSize: 20,
+        charPxHalf: 5
+    },
 
-        circle: {
-            radius: 30,
-            stroke: 2
-        },
+    circle: {
+        radius: 30,
+        stroke: 2
+    },
 
-        wave: {
-            stepWidth: 3,
-            angle: 20,
-            length: 520
-        }
+    wave: {
+        width: 300,
+        stepWidth: 3,
+        angle: 20,
+        length: 520
     },
 
     /**
@@ -142,20 +145,22 @@ var Scene = {
          * @type {(function(this:Hologram))|Function}
          */
         this.init = function (canvas, id_) {
+            // WIDTH is HEIGHT and otherwise because of angle
+            var tmpH = Scene.hologramOpt.width;
+            var tmpW = Scene.hologramOpt.height;
 
             hologramRect = new fabric.Rect({
                 stroke: 'black',
                 strokeWidth: 2,
                 left: canvas.width / 2,
-                top: (canvas.height / 2) - (230 / 2),
-                width: 230,
-                height: 70,
+                top: (canvas.height / 2) - (Scene.hologramOpt.height / 2),
+                width: tmpW,
+                height: tmpH,
                 fill: 'white',
                 angle: 90,
-                id: id_
+                id: id_,
+                selectable: false
             });
-
-            hologramRect.set('selectable', false); //unselectable
 
             this.computeInterference();
         }.bind(this);
@@ -172,8 +177,21 @@ var Scene = {
          * :O
          * @returns {*}
          */
-        this.getHologramHeight = function () {
+        this.getWidth = function () {
+            //noinspection JSSuspiciousNameCombination because its the other way -> width is height!!
             return hologramRect.height;
+        };
+
+        /**
+         * Returns hologram's left coord
+         * @returns {*}
+         */
+        this.getLeft = function () {
+            return hologramRect.left;
+        };
+
+        this.getRight = function(){
+            return this.getLeft() + this.getWidth();
         };
 
         /**
@@ -182,7 +200,7 @@ var Scene = {
         this.computeInterference = function () {
 
             //x = lambda/sin(fi)
-            interferenceMaximum = (Scene.options.wave.length * Scene.options.axisScale) / Math.sin(Scene.options.wave.angle * (Math.PI / 180));
+            interferenceMaximum = (Scene.wave.length * Scene.axisScale) / Math.sin(Scene.wave.angle * (Math.PI / 180));
             numOfMaximums = Math.floor(hologramRect.width / interferenceMaximum);
 
             var colors = {
@@ -219,14 +237,14 @@ var Scene = {
      * @constructor
      */
     Wave: function (wavelength_, waveAngle_, canvas) {
-        var __circle_radius_stroke = (Scene.options.circle.radius + Scene.options.circle.stroke);
+        var __circle_radius_stroke = (Scene.circle.radius + Scene.circle.stroke);
         var objectList = [];
         var group = null;
         var waveWrapper = null;
-        var width = 300;
+        var width = Scene.wave.width;
         var height = __circle_radius_stroke * 2;
 
-        this.wavelength = wavelength_ * Scene.options.axisScale;
+        this.wavelength = wavelength_ * Scene.axisScale;
         this.waveAngle = waveAngle_;
         this.caption = null;
 
@@ -251,11 +269,11 @@ var Scene = {
             }
 
             var circle = new fabric.Circle({
-                radius: Scene.options.circle.radius,
+                radius: Scene.circle.radius,
                 fill: 'white',
                 left: left,
                 top: top_,
-                strokeWidth: Scene.options.circle.stroke,
+                strokeWidth: Scene.circle.stroke,
                 strokeDashArray: strokeDash,
                 stroke: 'black',
                 id: "circle",
@@ -267,9 +285,14 @@ var Scene = {
 
         /**
          * Object initialization
+         * @param left_
+         * @param top_
+         * @param id_
+         * @param caption_
+         * @param circleCreating_
          * @type {(function(this:Wave))|Function}
          */
-        this.init = function (left_, top_, id_, caption_, circleCreating) {
+        this.init = function (left_, top_, id_, caption_, circleCreating_) {
 
             waveWrapper = new fabric.Rect({
                 left: left_,
@@ -280,9 +303,9 @@ var Scene = {
             });
 
             this.caption = new fabric.Text(caption_, {
-                left: waveWrapper.left + (waveWrapper.width / 2) - (caption_.length * Scene.options.caption.charPxHalf),
+                left: waveWrapper.left + (waveWrapper.width / 2) - (caption_.length * Scene.caption.charPxHalf),
                 top: waveWrapper.top + waveWrapper.height,
-                fontSize: Scene.options.caption.fontSize,
+                fontSize: Scene.caption.fontSize,
                 id: "caption",
                 visible: false
             });
@@ -291,7 +314,7 @@ var Scene = {
             objectList.push(waveWrapper);
             this.fillWave();
 
-            if (circleCreating) {
+            if (circleCreating_) {
                 var circle = this.createCircle(waveWrapper.top, left_, id_);
                 top_ -= __circle_radius_stroke;
                 objectList.push(circle);
@@ -317,7 +340,7 @@ var Scene = {
          * @type {(function(this:Wave))|Function}
          */
         this.fillWave = function () {
-            var currentX = waveWrapper.left - Scene.options.wave.stepWidth;
+            var currentX = waveWrapper.left - Scene.wave.stepWidth;
             var waveRight = waveWrapper.left + waveWrapper.width;
 
             var listOfWaveLines = [];
@@ -325,8 +348,8 @@ var Scene = {
                 var waveLine = new fabric.Rect({
                     left: currentX,
                     top: waveWrapper.top,
-                    fill: Scene.wavelengthToColor(this.wavelength / Scene.options.axisScale)[0],
-                    width: Scene.options.wave.stepWidth,
+                    fill: Scene.wavelengthToColor(this.wavelength / Scene.axisScale)[0],
+                    width: Scene.wave.stepWidth,
                     height: waveWrapper.height
 
                 });
@@ -366,7 +389,7 @@ var Scene = {
 
                 group.remove(o);
             });
-            this.wavelength = newWavelength * Scene.options.axisScale;
+            this.wavelength = newWavelength * Scene.axisScale;
             this.fillWave();
             // add it as last so that it is on top of waves
             if (circle) {
@@ -411,14 +434,14 @@ var Scene = {
          * Reference wave
          ** @type {Wave}
          */
-        this.record.referenceWave = new Scene.Wave(Scene.options.wave.length, Scene.options.wave.angle, this.recordingCanvas);
+        this.record.referenceWave = new Scene.Wave(Scene.wave.length, Scene.wave.angle, this.recordingCanvas);
         this.record.referenceWave.init(this.recordingCanvas.width / 2, (this.recordingCanvas.height / 2), "recordReferenceWave", "Referenční vlna");
 
         /**
          * Object wave
          ** @type {Wave}
          */
-        this.record.objectWave = new Scene.Wave(Scene.options.wave.length, 0, this.recordingCanvas);
+        this.record.objectWave = new Scene.Wave(Scene.wave.length, 0, this.recordingCanvas);
         this.record.objectWave.init(this.recordingCanvas.width / 2, (this.recordingCanvas.height / 2), "recordObjectWave", "Objektová vlna", true);
     },
 
@@ -428,7 +451,7 @@ var Scene = {
      */
     _initReconstruction: function () {
         //left for waves on the left half of canvas
-        var left_ = this.reconstructionCanvas.width / 2 - (300 + this.hologram.getHologramHeight());
+        var left_ = this.hologram.getLeft() - (Scene.wave.width + this.hologram.getWidth());
         //avoid values less then 0
         left_ = (left_ < 0) ? 0 : left_;
 
@@ -436,22 +459,22 @@ var Scene = {
          * Reference wave
          * @type {Wave}
          */
-        this.recon.referenceWave = new Scene.Wave(Scene.options.wave.length, Scene.options.wave.angle, this.reconstructionCanvas);
+        this.recon.referenceWave = new Scene.Wave(Scene.wave.length, Scene.wave.angle, this.reconstructionCanvas);
         this.recon.referenceWave.init(this.recordingCanvas.width / 2, (this.recordingCanvas.height / 2), "reconReferenceWave", "Referenční vlna");
 
         /**
          * Reference wave continuation
          * @type {Wave}
          */
-        this.recon.referenceWaveCont = new Scene.Wave(Scene.options.wave.length, Scene.options.wave.angle + 180, this.reconstructionCanvas);
-        this.recon.referenceWaveCont.init(left_ + 300, (this.reconstructionCanvas.height / 2), "reconReferenceWaveContinue", "Referenční vlna");
+        this.recon.referenceWaveCont = new Scene.Wave(Scene.wave.length, Scene.wave.angle + 180, this.reconstructionCanvas);
+        this.recon.referenceWaveCont.init(left_ + Scene.wave.width, (this.reconstructionCanvas.height / 2), "reconReferenceWaveContinue", "Referenční vlna");
         this.recon.referenceWaveCont.caption.rotate(180);
 
         /**
          * Object wave
          * @type {Wave}
          */
-        this.recon.objectWave = new Scene.Wave(Scene.options.wave.length, 0, this.reconstructionCanvas);
+        this.recon.objectWave = new Scene.Wave(Scene.wave.length, 0, this.reconstructionCanvas);
         this.recon.objectWave.init(left_, (this.reconstructionCanvas.height / 2), "reconObjectWave", "Objektová vlna", true);
     },
 
@@ -463,8 +486,8 @@ var Scene = {
          * Callback function called when window is resizing
          */
         windowResize: function () {
-            var wrapperWidth = $('#canvasWrapper').width() - Scene.options.canvas_padding;
-            var windowHeight = $(window).height() - $('#header').height() - Scene.options.windowBottomCompensation;
+            var wrapperWidth = $('#canvasWrapper').width() - Scene.canvas_padding;
+            var windowHeight = $(window).height() - $('#header').height() - Scene.windowBottomCompensation;
 
             Scene.recordingCanvas.setWidth(wrapperWidth);
             Scene.recordingCanvas.setHeight(windowHeight);
@@ -507,7 +530,7 @@ var Scene = {
             Scene.recon.referenceWaveCont.changeWaveLength(newValue);
             Scene.recon.objectWave.changeWaveLength(newValue);
 
-            Scene.options.wave.length = newValue;
+            Scene.wave.length = newValue;
             Scene.hologram.computeInterference();
 
             Scene.reconstructionCanvas.renderAll();
@@ -527,7 +550,7 @@ var Scene = {
             Scene.recon.referenceWave.changeAngle(newAngle);
             Scene.recon.referenceWaveCont.changeAngle(newAngle - 180);
 
-            Scene.options.wave.angle = newAngle;
+            Scene.wave.angle = newAngle;
             Scene.hologram.computeInterference();
 
             Scene.reconstructionCanvas.renderAll();
@@ -535,5 +558,3 @@ var Scene = {
         }
     }
 };
-
-Scene.run();
